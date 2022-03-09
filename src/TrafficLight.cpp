@@ -11,10 +11,10 @@ T MessageQueue<T>::receive()
     // to wait for and receive new messages and pull them from the queue using move semantics. 
     // The received object should then be returned by the receive function.
     std::unique_lock<std::mutex> uLock(_mutex);
-    _cond.wait(uLock, [this] { return !_messages.empty(); });
+    _cond.wait(uLock, [this] { return !_queue.empty(); });
 
-    T msg = std::move(_messages.back());
-    _messages.pop_back();
+    T msg = std::move(_queue.back());
+    _queue.pop_back();
 
     return msg;
 }
@@ -25,7 +25,7 @@ void MessageQueue<T>::send(T &&msg)
     // FP.4a : The method send should use the mechanisms std::lock_guard<std::mutex> 
     // as well as _condition.notify_one() to add a new message to the queue and afterwards send a notification.
     std::lock_guard<std::mutex> uLock(_mutex);
-    _messages.push_back(std::move(msg));
+    _queue.push_back(std::move(msg));
     _cond.notify_one();
 }
 
@@ -63,4 +63,32 @@ void TrafficLight::cycleThroughPhases()
     // to the message queue using move semantics. The cycle duration should be a random value between 4 and 6 seconds.
     // Also, the while-loop should use std::this_thread::sleep_for to wait 1ms between two cycles.
 
+    // random number generation between 4 and 6
+    std::random_device dev;
+    std::mt19937 gen(dev()); // seed
+    std::uniform_int_distribution<int> dist(4000, 6000); // range
+    double _interval = dist(gen);
+
+    // start time measurement
+    std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+    while (true)
+    {
+        std::this_thread::sleep_for(std::chrono::microseconds(1));
+        std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+        auto _duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+
+        if (_duration >= _interval)
+        {
+            if (_currentPhase == TrafficLightPhase::red)
+            {
+                _currentPhase = TrafficLightPhase::green;
+            }
+            else
+            {
+                _currentPhase = TrafficLightPhase::red;
+            }
+            _messages.send(std::move(_currentPhase));
+            t1 = std::chrono::high_resolution_clock::now();
+        }
+    }
 }
