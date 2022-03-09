@@ -97,6 +97,7 @@ void TrafficLight::cycleThroughPhases()
             }
             _messages.send(std::move(_currentPhase));
             t1 = std::chrono::high_resolution_clock::now();
+            _interval = dist(gen);
         }
     }
 }
