@@ -75,28 +75,22 @@ void TrafficLight::cycleThroughPhases()
     std::random_device dev;
     std::mt19937 gen(dev()); // seed
     std::uniform_int_distribution<int> dist(4000, 6000); // range
-    double _interval = dist(gen);
+    int _duration = dist(gen);
 
     // start time measurement
-    std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+    std::chrono::time_point<std::chrono::system_clock> _prev_t;
+    _prev_t = std::chrono::system_clock::now();
     while (true)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
-        auto _duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+        auto _diff = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - _prev_t).count();
 
-        if (_duration >= _interval)
+        if (_diff >= _duration)
         {
-            if (_currentPhase == TrafficLightPhase::red)
-            {
-                _currentPhase = TrafficLightPhase::green;
-            }
-            else
-            {
-                _currentPhase = TrafficLightPhase::red;
-            }
+            _prev_t = std::chrono::system_clock::now();
+            _duration = dist(gen);
+            _currentPhase = _currentPhase == TrafficLightPhase::red ? TrafficLightPhase::green : TrafficLightPhase::red;
             _messages.send(std::move(_currentPhase));
-            t1 = std::chrono::high_resolution_clock::now();
         }
     }
 }
