@@ -43,7 +43,7 @@ void TrafficLight::waitForGreen()
     // Once it receives TrafficLightPhase::green, the method returns.
     while (true)
     {
-        std::this_thread::sleep_for(std::chrono::microseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
         if (_messages.receive() == TrafficLightPhase::green)
         {
             return;
@@ -81,9 +81,9 @@ void TrafficLight::cycleThroughPhases()
     std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
     while (true)
     {
-        std::this_thread::sleep_for(std::chrono::microseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
         std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
-        auto _duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+        auto _duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
 
         if (_duration >= _interval)
         {
@@ -97,7 +97,6 @@ void TrafficLight::cycleThroughPhases()
             }
             _messages.send(std::move(_currentPhase));
             t1 = std::chrono::high_resolution_clock::now();
-            _interval = dist(gen);
         }
     }
 }
